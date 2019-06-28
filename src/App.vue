@@ -1,24 +1,41 @@
 <template>
 	<div id="app">
 		<h1>Tarefas</h1>
+		<TaskProgress :progress="progress"></TaskProgress>
 		<NewTask @taskAdded="addTask"></NewTask>
 		<TaskGrid :tasks="tasks" @taskDeleted="deleteTask" @taskStateChanged="toggleTaskState"></TaskGrid>
-
 	</div>
 </template>
 
 <script>
 
+	import TaskProgress from './components/TaskProgress'
 	import NewTask from './components/NewTask'
 	import TaskGrid from './components/TaskGrid'
 
 	export default {
 
-		components: { NewTask, TaskGrid },
+		components: { TaskProgress, NewTask, TaskGrid },
 
 		data() {
 			return {
 				tasks: []
+			}
+		},
+		computed: {
+			progress() {
+				const total = this.tasks.length
+				const done 	= this.tasks.filter( t => !t.pending).length
+
+				return Math.round(done / total * 100) || 0
+			}
+		},
+		watch: {
+			tasks: {
+				deep: true,
+				handler() {
+					localStorage.setItem('tasks', JSON.stringify(this.tasks))
+				}
 			}
 		},
 		methods: {
@@ -40,6 +57,11 @@
 				this.tasks[i].pending = !this.tasks[i].pending
 			}
 
+		},
+		created() {
+			const json = localStorage.getItem('tasks')
+			const array = JSON.parse(json)
+			this.tasks =  Array.isArray(array) ? array : []
 		}
 
 	}
